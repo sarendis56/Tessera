@@ -1,0 +1,57 @@
+[project]
+name = "tessera"
+version = "0.1.0"
+description = "Tessera: structure-completed evidence units for web RAG"
+readme = "README.md"
+requires-python = ">=3.12,<3.13"
+dependencies = [
+    "datasets==4.8.5",
+    "faiss-gpu-cu12==1.13.2",
+    "libzim==3.7.0",
+    "lxml==6.1.1",
+    "numpy==2.2.6",
+    "openai==2.45.0",
+    "pillow==12.3.0",
+    "pyarrow==25.0.0",
+    "torch==2.11.0",
+    "trafilatura==2.0.0",
+    "transformers==5.13.1",
+    "vllm==0.25.1",
+]
+
+[project.optional-dependencies]
+# PixelRAG screenshot pipeline: LoRA query encoder and the upstream tile renderer.
+screenshot = ["peft==0.20.0", "safetensors==0.8.0", "websockets==16.1", "zstandard"]
+# Matched-budget baselines.
+baselines = [
+    "htmlrag==0.1.1",
+    "anytree==2.13.0",
+    "beautifulsoup4==4.15.0",
+    "docling-slim[convert-core,format-html,feat-chunking]==2.130.0",
+    "unstructured==0.27.9",
+]
+dev = ["pytest>=8.3", "ruff==0.11.13"]
+
+[tool.uv]
+environments = ["sys_platform == 'linux'"]
+# lark-parser 0.7 (pulled in by htmlrag) and lark 1.x (vllm) share the `lark` package;
+# htmlrag's faiss-cpu shares `faiss` with faiss-gpu-cu12 and is never imported by the pruner.
+override-dependencies = [
+    "lark-parser; sys_platform == 'never'",
+    "faiss-cpu; sys_platform == 'never'",
+]
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/tessera"]
+
+[tool.ruff]
+line-length = 110
+target-version = "py312"
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "UP", "B"]
+ignore = ["E501"]  # the formatter wraps code; long strings stay whole

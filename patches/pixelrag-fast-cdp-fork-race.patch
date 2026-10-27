@@ -1,0 +1,39 @@
+diff --git a/render/src/pixelrag_render/backends/fast_cdp.py b/render/src/pixelrag_render/backends/fast_cdp.py
+index 0427ddb..588d6e3 100644
+--- a/render/src/pixelrag_render/backends/fast_cdp.py
++++ b/render/src/pixelrag_render/backends/fast_cdp.py
+@@ -293,6 +293,10 @@ async def _run_render(
+ 
+     compress_inbox: _queue.Queue = _queue.Queue()
+     compress_done = threading.Event()
++    # Chrome must launch only after the pool has forked: a worker forked while
++    # subprocess.Popen waits on its exec-status pipe inherits the pipe's write
++    # end, so Popen never sees EOF and the render hangs at startup.
++    pool_forked = threading.Event()
+ 
+     n_cpus = os.cpu_count() or 128
+     compress_cores = set(range(max(0, n_cpus - n_compressors), n_cpus))
+@@ -304,9 +308,12 @@ async def _run_render(
+             pass
+ 
+     def _compressor_thread():
+-        pool = MPPool(processes=n_compressors, initializer=_pool_init)
+-        # Warm up: ensure all workers are forked and idle before capture starts
+-        pool.map(int, range(n_compressors))
++        try:
++            pool = MPPool(processes=n_compressors, initializer=_pool_init)
++            # Warm up: ensure all workers are forked and idle before capture starts
++            pool.map(int, range(n_compressors))
++        finally:
++            pool_forked.set()
+         async_results = []
+         while True:
+             item = compress_inbox.get()  # block until item available
+@@ -325,6 +332,7 @@ async def _run_render(
+ 
+     compress_thread = threading.Thread(target=_compressor_thread, daemon=True)
+     compress_thread.start()
++    await asyncio.to_thread(pool_forked.wait)
+ 
+     base_port = _next_base_port()
+ 
