@@ -142,4 +142,17 @@ The agent samples at temperature 1.0 (the Qwen3.5 model card settings for thinki
 
 ## Citation
 
-Stay tuned.
+```latex
+@article{hua2026tessera,
+  title={Tessera: Structure-Completed Evidence Units for Web Retrieval-Augmented Generation},
+  author={Peichun Hua and He Sun and Zirui Zhuang and Qi Qi and Yiming Qiu and Shinan Liu and Yunming Xiao},
+  journal={CoRR},
+  volume={abs/2610.37080},
+  year={2026},
+  url={https://arxiv.org/abs/2610.37080},
+  doi={10.48550/arXiv.2610.37080},
+  eprinttype={arXiv},
+  eprint={2610.37080},
+  primaryClass={cs.IR}
+}
+```
